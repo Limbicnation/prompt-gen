@@ -1,4 +1,4 @@
-# DeepSeek Prompt Generator
+# Prompt Generator
 
 Prompt generator using DeepSeek-R1-Distill-Llama-8B for Stable Diffusion and Flux.
 
