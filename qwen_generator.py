@@ -42,7 +42,7 @@ def extract_final_prompt(text: str) -> str:
         return text
     
     # Remove Qwen3 thinking blocks: "Thinking...\n...\n...done thinking.\n"
-    text = re.sub(r'Thinking\.\.\.\\n.*?\.\.\.done thinking\.\\n*', '', text, flags=re.DOTALL)
+    text = re.sub(r'Thinking\.\.\.\n.*?\.\.\.done thinking\.\n*', '', text, flags=re.DOTALL)
     
     # Remove common prefixes like "**Prompt:**" or "**Stable Diffusion Prompt:**"
     text = re.sub(r'\*\*(?:Stable Diffusion )?Prompt:\*\*\s*', '', text)
@@ -219,7 +219,10 @@ Format the response as a single, detailed prompt."""
         description: str,
         style: str = "cinematic",
         emphasis: Optional[str] = None,
-        mood: Optional[str] = None
+        mood: Optional[str] = None,
+        temperature: Optional[float] = None,
+        top_p: Optional[float] = None,
+        extract_prompt: Optional[bool] = None
     ) -> str:
         """
         Generate a detailed image generation prompt.
@@ -229,11 +232,19 @@ Format the response as a single, detailed prompt."""
             style: Style template to use
             emphasis: Optional focus area
             mood: Optional mood/atmosphere
+            temperature: Generation temperature (overrides instance default)
+            top_p: Top-p sampling (overrides instance default)
+            extract_prompt: Whether to extract prompt (overrides instance default)
             
         Returns:
             Detailed prompt for image generation
         """
         prompt = self._render_template(style, description, emphasis, mood)
+        
+        # Use provided params or fall back to instance defaults
+        final_temp = temperature if temperature is not None else self.temperature
+        final_top_p = top_p if top_p is not None else self.top_p
+        should_extract = extract_prompt if extract_prompt is not None else self.extract_prompt
         
         # Use Ollama Python API if available (supports temperature/top_p)
         if OLLAMA_API_AVAILABLE:
@@ -242,13 +253,13 @@ Format the response as a single, detailed prompt."""
                     model=self.model_name,
                     prompt=prompt,
                     options={
-                        "temperature": self.temperature,
-                        "top_p": self.top_p
+                        "temperature": final_temp,
+                        "top_p": final_top_p
                     }
                 )
                 output = response.get('response', '').strip()
                 
-                if self.extract_prompt:
+                if should_extract:
                     output = extract_final_prompt(output)
                 
                 return output
@@ -270,7 +281,7 @@ Format the response as a single, detailed prompt."""
             
             output = result.stdout.strip()
             
-            if self.extract_prompt:
+            if should_extract:
                 output = extract_final_prompt(output)
             
             return output

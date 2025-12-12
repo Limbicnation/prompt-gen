@@ -47,16 +47,16 @@ def generate_prompt(
         return "⚠️ Please enter an image description."
     
     gen = get_generator()
-    gen.temperature = temperature
-    gen.top_p = top_p
-    gen.extract_prompt = not include_reasoning
     
     try:
         result = gen.generate_prompt(
             description=description.strip(),
             style=style,
             emphasis=emphasis.strip() if emphasis else None,
-            mood=mood.strip() if mood else None
+            mood=mood.strip() if mood else None,
+            temperature=temperature,
+            top_p=top_p,
+            extract_prompt=not include_reasoning
         )
         
         if not result:
@@ -188,6 +188,9 @@ def main():
     
     # Pre-initialize generator
     get_generator()
+    
+    print("⚠️  Warning: Binding to 0.0.0.0 - accessible on your local network")
+    print("   Access at: http://localhost:7860")
     
     # Build and launch
     app = build_ui()
