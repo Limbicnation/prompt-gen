@@ -1,88 +1,46 @@
-# DeepSeek Prompt Generator
+# Prompt Generator
 
-This project is a Python-based tool that utilizes the `DeepSeek-R1-Distill-Llama-8B` model to generate high-quality prompts for image generation models like Stable Diffusion and Flux. It offers flexible usage modes to accommodate different hardware capabilities, including memory-optimized settings for lower VRAM environments.
+A Python tool that uses Qwen3-8B via Ollama to generate high-quality prompts for Stable Diffusion and Flux.
 
 ## Project Overview
 
-*   **Core Technology:** DeepSeek-R1-Distill-Llama-8B (LLM).
-*   **Purpose:** Automates the creation of detailed, style-specific prompts for generative AI art.
-*   **Key Features:**
-    *   **Dual Modes:** Standard (8GB+ VRAM) and Memory-Optimized (4GB+ VRAM).
-    *   **Model Management:** Supports both HuggingFace Hub downloads and offline local models.
-    *   **Style System:** Template-based styling (e.g., cinematic, anime, fantasy) customizable via JSON.
-    *   **Quantization:** Automatic 4-bit quantization support via `bitsandbytes` for efficiency.
+* **Core Technology:** Qwen3-8B via Ollama
+* **Purpose:** Generate detailed, style-specific prompts for generative AI art
+* **Key Features:**
+  * Fast generation (~7s per prompt)
+  * 7 style presets (cinematic, anime, fantasy, cyberpunk, etc.)
+  * Simple Ollama integration (no GPU management needed)
+  * Automatic reasoning extraction (strips "Thinking..." blocks)
 
-## Key Files & Structure
+## Key Files
 
-*   **`deepseek_generator.py`**: The core application logic. Contains the `DeepSeekGenerator` class which handles model loading, memory management, and prompt generation.
-*   **`download_model.py`**: Utility script to download and cache models locally for offline use.
-*   **`verify_installation.py`**: Diagnostic script to ensure all dependencies and CUDA drivers are correctly configured.
-*   **`create_directories.sh`**: Helper script to initialize the project structure (`data/`, `models/`) and default style templates.
-*   **`environment.yml`**: Conda environment specification (Recommended installation method).
-*   **`requirements.txt`**: Pip requirements file (Alternative installation method).
-*   **`data/style_templates.json`**: JSON file defining the prompt templates for various artistic styles.
+* **`qwen_generator.py`**: Main application - CLI and API for prompt generation
+* **`data/style_templates.json`**: Customizable style definitions
 
-## Installation & Setup
-
-**Recommended: Conda Environment**
-This ensures all CUDA and PyTorch dependencies are compatible.
+## Usage
 
 ```bash
-conda env create -f environment.yml
-conda activate deepseek-env
-python verify_installation.py
+# Basic usage
+python qwen_generator.py "a mystical forest" --style fantasy
+
+# List styles
+python qwen_generator.py --list-styles
+
+# Multiple variations
+python qwen_generator.py "cyberpunk city" --variations 3 --output prompts.json
 ```
 
-**Alternative: Pip**
-*Note: Requires manual management of CUDA libraries.*
+## Requirements
+
+* Python 3.8+
+* Ollama with `qwen3:8b` model
 
 ```bash
-pip install -r requirements.txt
+ollama pull qwen3:8b
 ```
 
-## Usage Guide
+## Development Notes
 
-### Basic Generation
-Generate a prompt based on a simple input and a style.
-
-```bash
-python deepseek_generator.py "a mystical forest" --style fantasy
-```
-
-### Memory Optimized (Low VRAM)
-Use the `--optimize` flag to enable 4-bit quantization and aggressive memory management. Essential for 4GB-8GB VRAM cards.
-
-```bash
-python deepseek_generator.py "a mystical forest" --style fantasy --optimize
-```
-
-### Advanced Configuration
-Full control over generation parameters.
-
-```bash
-python deepseek_generator.py "a futuristic city" \
-    --style cyberpunk \
-    --optimize \
-    --device cuda \
-    --max-length 2048 \
-    --temperature 0.7 \
-    --variations 2 \
-    --output prompts.json
-```
-
-### Offline / Local Models
-1.  **Download:** `python download_model.py --output-dir ./local_model_dir`
-2.  **Run:** `python deepseek_generator.py "prompt" --model-name ./local_model_dir --optimize`
-
-## Development Conventions
-
-*   **Style:** The codebase follows standard Python practices (`black` formatting is suggested).
-*   **Error Handling:** The `DeepSeekGenerator` class is designed to gracefully handle model loading failures and fall back to different configurations (e.g., disabling quantization if unavailable).
-*   **Memory Safety:** Explicit calls to `torch.cuda.empty_cache()` are used to prevent OOM errors during iterative generation.
-*   **Reasoning:** The model is configured to enforce a `<think>` token pattern, useful for structured outputs like math or complex reasoning, though primarily used here for creative detailing.
-
-## Troubleshooting
-
-*   **OOM Errors:** Use `--optimize`, reduce `--max-length`, or decrease `--variations`.
-*   **Model Not Found:** Ensure local paths are absolute or correctly relative. Use `--skip-local-check` if working on network drives.
-*   **Dependencies:** If you encounter `bitsandbytes` or `torch` errors, prefer the Conda installation method to resolve binary mismatches.
+* **Style System:** Templates in `data/style_templates.json`
+* **Output Cleaning:** `extract_final_prompt()` removes reasoning blocks
+* **Timeout:** Default 120s, configurable via `--timeout`

@@ -1,184 +1,125 @@
 # Prompt Generator
 
-Prompt generator using DeepSeek-R1-Distill-Llama-8B for Stable Diffusion and Flux.
+Generate high-quality Stable Diffusion/Flux prompts using LLMs via Ollama.
 
-## Installation
+**Default model:** Qwen3-8B (~7s per prompt, 5GB)
 
-**Important:** For best results and to avoid dependency conflicts, use the conda-based installation method.
-
-### Recommended: Conda Installation
+## Quick Start
 
 ```bash
-# Clone the repository
-git clone https://github.com/yourusername/deepseek-prompt-gen.git
-cd deepseek-prompt-gen
+# Install Ollama (https://ollama.ai)
+curl -fsSL https://ollama.ai/install.sh | sh
 
-# Method 1: Using environment.yml (Recommended)
-conda env create -f environment.yml
-conda activate deepseek-env
+# Pull the model
+ollama pull qwen3:8b
 
-# Method 2: Manual conda setup
-conda create -n deepseek python=3.10
-conda activate deepseek
-conda install pytorch torchvision pytorch-cuda=12.1 -c pytorch -c nvidia
-conda install transformers accelerate tokenizers -c conda-forge
-pip install safetensors sentencepiece protobuf huggingface-hub
-
-# Verify installation
-python verify_installation.py
+# Clone and run
+git clone https://github.com/<your-username>/prompt-gen.git
+cd prompt-gen
+python qwen_generator.py "a mystical forest" --style fantasy
 ```
-
-### Alternative: pip Installation
-
-```bash
-# Only use if conda is not available
-pip install -r requirements.txt
-```
-
-**Note:** The pip method may require manual CUDA library management. Use conda for the most reliable installation.
 
 ## Usage
 
+### Command Line
+
+```bash
+# Basic usage
+python qwen_generator.py "a cyberpunk city at night" --style cyberpunk
+
+# Generate multiple variations
+python qwen_generator.py "ancient ruins" --style fantasy --variations 3
+
+# Save to file
+python qwen_generator.py "portrait of a wizard" --output prompts.json
+
+# List available styles
+python qwen_generator.py --list-styles
+```
+
+### Python API
+
 ```python
-from deepseek_generator import DeepSeekGenerator
+from qwen_generator import QwenGenerator
 
-# Standard usage (8GB+ VRAM)
-generator = DeepSeekGenerator()
+generator = QwenGenerator()
 prompt = generator.generate_prompt(
     "a mystical forest at twilight",
     style="fantasy"
 )
-
-# Memory-optimized (4GB+ VRAM)
-generator = DeepSeekGenerator(optimize_memory=True)
-prompt = generator.generate_prompt(
-    "a mystical forest at twilight",
-    style="fantasy"
-)
+print(prompt)
 ```
 
-## Command Line Usage
+## Available Styles
 
-```bash
-# Standard mode
-python deepseek_generator.py "a mystical forest" --style fantasy
-
-# Memory-optimized mode
-python deepseek_generator.py "a mystical forest" --style fantasy --optimize
-
-# Save output to file
-python deepseek_generator.py "a mystical forest" --output prompts.json
-
-# Advanced options
-python deepseek_generator.py "a mystical forest" \
-    --style fantasy \
-    --optimize \
-    --device cuda \
-    --max-length 2048 \
-    --variations 2
-```
-
-## Model Management
-
-### Using HuggingFace Models (Default)
-By default, the script will download the model from HuggingFace and cache it in the `./models` directory:
-
-```bash
-python deepseek_generator.py "a mystical forest"
-```
-
-### Downloading Models for Offline Use
-To avoid re-downloading models, you can use the included `download_model.py` script:
-
-```bash
-python download_model.py --output-dir ./local_model_dir
-```
-
-### Using Local Models
-To use a previously downloaded model:
-
-```bash
-python deepseek_generator.py "prompt" --model-name /path/to/local_model_dir --optimize
-```
-
-**Important:** Always use the `--optimize` flag when using local models to avoid VRAM issues.
-
-## Model Settings
-- Temperature: 0.6 (optimized for coherent outputs)
-- Top-p: 0.95
-- Available styles: cinematic, anime, photorealistic, fantasy, abstract
-- Max generation length: 2048 tokens (configurable)
-
-## Advanced Configuration
-
-- `--model-name`: Path to a local model or HuggingFace model ID
-- `--device`: Choose between 'cuda' or 'cpu'
-- `--max-length`: Set maximum token length (default: 2048)
-- `--variations`: Number of prompt variations to generate (default: 2)
-- `--optimize`: Enable memory optimizations for lower VRAM usage
-- `--model-dir`: Directory to cache downloaded models (default: ./models)
+| Style | Description |
+|-------|-------------|
+| `cinematic` | Dramatic lighting and composition |
+| `anime` | Vibrant anime-style illustration |
+| `photorealistic` | High-detail realistic images |
+| `fantasy` | Magical elements and themes |
+| `abstract` | Artistic abstract compositions |
+| `cyberpunk` | Neon lights, technology, urban dystopia |
+| `sci-fi` | Futuristic technology scenes |
 
 ## Requirements
 
-### System Requirements
-- Python 3.10+
-- CUDA-capable GPU with 4GB+ VRAM (8GB+ recommended)
-- CUDA 12.1+ (12.6 tested and working)
-- Ubuntu/Linux (WSL2 supported)
+- Python 3.8+
+- [Ollama](https://ollama.ai) with `qwen3:8b` model
+- No GPU required (Ollama handles inference)
 
-### Key Dependencies
-- PyTorch 2.1+ with CUDA 12.1 support
-- transformers 4.46+ (with tokenizers 0.20+)
-- accelerate 0.25+
-- bitsandbytes 0.43+ (optional, for quantization)
+### Install Ollama
 
-### Verified Working Configuration
-- CUDA 12.1/12.6
-- PyTorch 2.5.1+cu121
-- transformers 4.46+
-- tokenizers 0.20+
-
-## Troubleshooting
-
-### Installation Issues
-
-**Tensor Shape Mismatch Errors:**
 ```bash
-# Clean up corrupted installations
-rm -rf ./local_model_dir ./models
-conda remove pytorch torchvision transformers --yes
-conda install pytorch torchvision pytorch-cuda=12.1 -c pytorch -c nvidia
+# Linux/macOS
+curl -fsSL https://ollama.ai/install.sh | sh
+
+# Pull the model (~5GB)
+ollama pull qwen3:8b
+
+# Start the server (if not auto-started)
+ollama serve
 ```
 
-**tokenizers Version Conflicts:**
-```bash
-# Ensure compatible versions
-pip install "transformers>=4.46.0" "tokenizers>=0.20.0,<0.22.0"
+## CLI Options
+
+| Option | Default | Description |
+|--------|---------|-------------|
+| `--style` | cinematic | Style preset to use |
+| `--variations` | 1 | Number of prompt variations |
+| `--output` | - | Save results to JSON file |
+| `--model` | qwen3:8b | Ollama model to use |
+| `--timeout` | 120 | Generation timeout (seconds) |
+| `--raw` | false | Keep reasoning in output |
+| `--list-styles` | - | List available styles |
+
+## Example Output
+
+**Input:** `"a cyberpunk street market at night" --style cyberpunk`
+
+**Output:**
+
+```
+A hyper-detailed cyberpunk street market at night, rendered in ultra-high 
+resolution (8K), with a dynamic composition featuring a winding, rain-slicked 
+pavement leading through a labyrinth of neon-lit stalls. Towering holographic 
+advertisements project iridescent gradients of electric blue, magenta, and toxic 
+green, casting kaleidoscopic reflections on wet concrete...
 ```
 
-**bitsandbytes CUDA Issues:**
-```bash
-# Skip quantization if problematic
-python deepseek_generator.py "prompt" --output test.json
-# The generator will automatically disable quantization if bitsandbytes is unavailable
-```
+## Comparison with Other Models
 
-### Runtime Issues
+This project evaluated multiple models. Qwen3-8B was chosen for:
 
-**CUDA Out-of-Memory Errors:**
-- Enable `--optimize` flag for 4-bit quantization
-- Reduce `--max-length` (try 1024 or 512)
-- Lower number of `--variations`
-- Use `--device cpu` as last resort (much slower)
+| Factor | Qwen3-8B | DeepSeek-R1-8B |
+|--------|----------|----------------|
+| Speed | ~7s per prompt | ~5min per prompt |
+| Output Quality | Detailed, specific | Shorter, generic |
+| Model Size | ~5GB | ~15GB |
+| Deployment | Simple (Ollama) | Complex (HuggingFace) |
 
-**Model Loading Issues:**
-- Use `--skip-local-check` to bypass corrupted local models
-- Delete `./local_model_dir` and let the system download fresh models
-- Verify CUDA installation: `nvidia-smi` and `nvcc --version`
-
-**Performance on Network Drives:**
-- Use `--skip-local-check` flag for better performance
-- Download models to local storage when possible
+See `evaluation_results/` for detailed comparison data.
 
 ## License
+
 Apache License 2.0
