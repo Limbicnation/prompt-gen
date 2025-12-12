@@ -1,0 +1,9 @@
+# Prompt Generator Dependencies
+
+# Core
+gradio>=4.0
+jinja2>=3.0
+pyyaml>=6.0
+
+# Ollama API (enables temperature/top_p control)
+ollama>=0.4.0
