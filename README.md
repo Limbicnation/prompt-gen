@@ -14,8 +14,8 @@ curl -fsSL https://ollama.ai/install.sh | sh
 ollama pull qwen3:8b
 
 # Clone and run
-git clone https://github.com/Limbicnation/qwen-prompt-gen.git
-cd qwen-prompt-gen
+git clone https://github.com/<your-username>/prompt-gen.git
+cd prompt-gen
 python qwen_generator.py "a mystical forest" --style fantasy
 ```
 

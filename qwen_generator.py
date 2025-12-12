@@ -23,7 +23,6 @@ def extract_final_prompt(text: str) -> str:
         return text
     
     # Remove Qwen3 thinking blocks: "Thinking...\n...\n...done thinking.\n"
-    text = re.sub(r'Thinking\.\.\.\\n.*?\.\.\.done thinking\.\\n*', '', text, flags=re.DOTALL)
     text = re.sub(r'Thinking\.\.\.\n.*?\.\.\.done thinking\.\n*', '', text, flags=re.DOTALL)
     
     # Remove common prefixes like "**Prompt:**" or "**Stable Diffusion Prompt:**"
@@ -88,8 +87,7 @@ class QwenGenerator:
             elif self.model_name not in result.stdout:
                 print(f"Warning: Model {self.model_name} not found. Pull with: ollama pull {self.model_name}")
         except FileNotFoundError:
-            print("Error: Ollama not found. Install from: https://ollama.ai")
-            sys.exit(1)
+            raise RuntimeError("Ollama not found. Install from: https://ollama.ai")
         except subprocess.TimeoutExpired:
             print("Warning: Ollama check timed out")
     

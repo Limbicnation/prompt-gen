@@ -15,7 +15,6 @@ A Python tool that uses Qwen3-8B via Ollama to generate high-quality prompts for
 ## Key Files
 
 * **`qwen_generator.py`**: Main application - CLI and API for prompt generation
-* **`evaluate_models.py`**: Model comparison tool (Qwen3 vs DeepSeek)
 * **`data/style_templates.json`**: Customizable style definitions
 
 ## Usage
