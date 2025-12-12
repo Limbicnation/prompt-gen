@@ -13,19 +13,39 @@ curl -fsSL https://ollama.ai/install.sh | sh
 # Pull the model
 ollama pull qwen3:8b
 
-# Clone and run
-git clone https://github.com/<your-username>/prompt-gen.git
+# Clone and install
+git clone https://github.com/Limbicnation/prompt-gen.git
 cd prompt-gen
-python qwen_generator.py "a mystical forest" --style fantasy
+pip install -r requirements.txt
+
+# Launch Web UI
+python app.py
+# → Opens http://localhost:7860
 ```
 
 ## Usage
+
+### Web UI (Recommended)
+
+```bash
+python app.py
+```
+
+Features:
+
+- Style dropdown with 7 presets
+- Temperature & Top-P sliders
+- Emphasis and Mood inputs
+- Include reasoning toggle
 
 ### Command Line
 
 ```bash
 # Basic usage
 python qwen_generator.py "a cyberpunk city at night" --style cyberpunk
+
+# With advanced options
+python qwen_generator.py "ancient ruins" --style fantasy --temperature 0.8 --emphasis "lighting"
 
 # Generate multiple variations
 python qwen_generator.py "ancient ruins" --style fantasy --variations 3
@@ -86,6 +106,10 @@ ollama serve
 | Option | Default | Description |
 |--------|---------|-------------|
 | `--style` | cinematic | Style preset to use |
+| `--emphasis` | - | Focus area for the prompt |
+| `--mood` | - | Mood/atmosphere for the prompt |
+| `--temperature` | 0.7 | Generation creativity (0.1-1.0) |
+| `--top-p` | 0.9 | Nucleus sampling threshold |
 | `--variations` | 1 | Number of prompt variations |
 | `--output` | - | Save results to JSON file |
 | `--model` | qwen3:8b | Ollama model to use |
