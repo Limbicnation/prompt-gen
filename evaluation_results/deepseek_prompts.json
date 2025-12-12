@@ -1,0 +1,26 @@
+[
+  {
+    "model": "deepseek-r1-8b",
+    "concept": "a cyberpunk street market at night",
+    "style": "cyberpunk",
+    "prompt": null,
+    "error": "Timeout after 300s",
+    "generation_time_seconds": 300
+  },
+  {
+    "model": "deepseek-r1-8b",
+    "concept": "portrait of an elderly wizard",
+    "style": "fantasy",
+    "prompt": null,
+    "error": "Timeout after 300s",
+    "generation_time_seconds": 300
+  },
+  {
+    "model": "deepseek-r1-8b",
+    "concept": "abandoned space station interior",
+    "style": "sci-fi",
+    "prompt": null,
+    "error": "Timeout after 300s",
+    "generation_time_seconds": 300
+  }
+]
