@@ -192,7 +192,7 @@ Examples:
   python qwen_generator.py "ancient ruins" --variations 3
         """
     )
-    parser.add_argument("description", type=str, help="Image description to expand")
+    parser.add_argument("description", type=str, nargs='?', help="Image description to expand")
     parser.add_argument("--style", type=str, default="cinematic",
                         choices=list(QwenGenerator.DEFAULT_STYLES.keys()),
                         help="Style preset to use (default: cinematic)")
@@ -215,6 +215,9 @@ Examples:
         for name, desc in QwenGenerator.DEFAULT_STYLES.items():
             print(f"  {name}: {desc}")
         return
+    
+    if not args.description:
+        parser.error("description is required (unless using --list-styles)")
     
     print(f"Qwen Prompt Generator - Generating prompts for: {args.description}")
     print(f"Style: {args.style}, Model: {args.model}")
