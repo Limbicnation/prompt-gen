@@ -4,6 +4,8 @@ Generate high-quality Stable Diffusion/Flux prompts using LLMs via Ollama.
 
 **Default model:** Qwen3-8B (~7s per prompt, 5GB)
 
+![Prompt Generator](images/prompt-gen-readme.png)
+
 ## Quick Start
 
 ```bash
