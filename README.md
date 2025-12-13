@@ -146,6 +146,10 @@ This project evaluated multiple models. Qwen3-8B was chosen for:
 
 See `evaluation_results/` for detailed comparison data.
 
+## Related Projects
+
+- **[ComfyUI-PromptGenerator](https://github.com/Limbicnation/ComfyUI-PromptGenerator)** - ComfyUI node version of this tool, available on the [ComfyUI Registry](https://registry.comfy.org/publishers/limbicnation/nodes/comfyui-prompt-generator)
+
 ## License
 
 Apache License 2.0
