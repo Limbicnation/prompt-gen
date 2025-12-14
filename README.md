@@ -90,6 +90,26 @@ print(prompt)
 - [Ollama](https://ollama.ai) with `qwen3:8b` model
 - No GPU required (Ollama handles inference)
 
+### Quick Install
+
+```bash
+pip install -r requirements.txt
+python app.py
+```
+
+### Optional: Dedicated Conda Environment
+
+If you prefer an isolated environment:
+
+```bash
+# Create environment
+conda create -n prompt-gen python=3.10 -y
+conda activate prompt-gen
+
+# Install dependencies
+pip install -r requirements.txt
+```
+
 ### Install Ollama
 
 ```bash
