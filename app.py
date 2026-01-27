@@ -4,19 +4,17 @@ Gradio Web UI for Prompt Generator
 A user-friendly interface for generating Stable Diffusion prompts using Qwen3-8B via Ollama
 """
 
+import os
+from functools import lru_cache
+
 import gradio as gr
-from qwen_generator import QwenGenerator, OLLAMA_API_AVAILABLE
-
-# Global generator instance (loaded once on startup for performance)
-generator: QwenGenerator = None
+from qwen_generator import QwenGenerator, GenerationError, OLLAMA_API_AVAILABLE
 
 
+@lru_cache(maxsize=1)
 def get_generator() -> QwenGenerator:
-    """Get or create the global generator instance."""
-    global generator
-    if generator is None:
-        generator = QwenGenerator()
-    return generator
+    """Get or create the singleton generator instance."""
+    return QwenGenerator()
 
 
 def generate_prompt(
@@ -63,6 +61,10 @@ def generate_prompt(
             return "⚠️ Generation failed. Please check that Ollama is running."
         
         return result
+    except ValueError as e:
+        return f"⚠️ Validation Error: {str(e)}"
+    except GenerationError as e:
+        return f"⚠️ Generation Error: {str(e)}"
     except Exception as e:
         return f"⚠️ Error: {str(e)}"
 
@@ -189,14 +191,19 @@ def main():
     # Pre-initialize generator
     get_generator()
     
-    print("⚠️  Warning: Binding to 0.0.0.0 - accessible on your local network")
-    print("   Access at: http://localhost:7860")
+    # Get host/port from environment (default to localhost for security)
+    host = os.environ.get("PROMPT_GEN_HOST", "127.0.0.1")
+    port = int(os.environ.get("PROMPT_GEN_PORT", "7860"))
+    
+    if host == "0.0.0.0":
+        print("⚠️  Warning: Binding to 0.0.0.0 - accessible on your local network")
+    print(f"   Access at: http://{host if host != '0.0.0.0' else 'localhost'}:{port}")
     
     # Build and launch
     app = build_ui()
     app.launch(
-        server_name="0.0.0.0",
-        server_port=7860,
+        server_name=host,
+        server_port=port,
         share=False,
         show_error=True,
         theme=gr.themes.Soft(

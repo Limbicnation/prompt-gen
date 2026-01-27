@@ -6,12 +6,16 @@ Generate high-quality prompts for Stable Diffusion using Qwen3-8B via Ollama
 
 import argparse
 import json
+import logging
 import os
 import re
 import subprocess
 import sys
 from pathlib import Path
 from typing import Any, Dict, List, Optional
+
+# Configure logging
+logger = logging.getLogger(__name__)
 
 # Optional imports for enhanced functionality
 try:
@@ -31,6 +35,14 @@ try:
     OLLAMA_API_AVAILABLE = True
 except ImportError:
     OLLAMA_API_AVAILABLE = False
+
+
+class GenerationError(Exception):
+    """Raised when prompt generation fails."""
+    pass
+
+
+__all__ = ["QwenGenerator", "extract_final_prompt", "GenerationError", "OLLAMA_API_AVAILABLE"]
 
 
 def extract_final_prompt(text: str) -> str:
@@ -108,13 +120,13 @@ class QwenGenerator:
                 timeout=10
             )
             if result.returncode != 0:
-                print("Warning: Ollama may not be running. Start with: ollama serve")
+                logger.warning("Ollama may not be running. Start with: ollama serve")
             elif self.model_name not in result.stdout:
-                print(f"Warning: Model {self.model_name} not found. Pull with: ollama pull {self.model_name}")
+                logger.warning(f"Model {self.model_name} not found. Pull with: ollama pull {self.model_name}")
         except FileNotFoundError:
             raise RuntimeError("Ollama not found. Install from: https://ollama.ai")
         except subprocess.TimeoutExpired:
-            print("Warning: Ollama check timed out")
+            logger.warning("Ollama check timed out")
     
     def _load_templates(self) -> Dict[str, Any]:
         """Load style templates from YAML file or use defaults."""
@@ -126,7 +138,7 @@ class QwenGenerator:
                     templates = yaml.safe_load(f)
                     return templates if templates else self.DEFAULT_STYLES
             except Exception as e:
-                print(f"Warning: Failed to load templates.yaml: {e}")
+                logger.warning(f"Failed to load templates.yaml: {e}")
         
         # Also try data/style_templates.json for backwards compatibility
         json_path = Path(__file__).parent / "data" / "style_templates.json"
@@ -239,12 +251,30 @@ Format the response as a single, detailed prompt."""
         Returns:
             Detailed prompt for image generation
         """
+        # Validate description
+        if not description or not description.strip():
+            raise ValueError("Description cannot be empty")
+        if len(description) > 10000:
+            raise ValueError("Description too long (max 10000 characters)")
+        description = description.strip()
+        
+        # Validate style
+        if style not in self.style_templates:
+            available = ", ".join(self.style_templates.keys())
+            raise ValueError(f"Unknown style '{style}'. Available: {available}")
+        
         prompt = self._render_template(style, description, emphasis, mood)
         
         # Use provided params or fall back to instance defaults
         final_temp = temperature if temperature is not None else self.temperature
         final_top_p = top_p if top_p is not None else self.top_p
         should_extract = extract_prompt if extract_prompt is not None else self.extract_prompt
+        
+        # Validate parameter bounds
+        if not (0.0 <= final_temp <= 2.0):
+            raise ValueError(f"Temperature must be 0.0-2.0, got {final_temp}")
+        if not (0.0 <= final_top_p <= 1.0):
+            raise ValueError(f"Top-p must be 0.0-1.0, got {final_top_p}")
         
         # Use Ollama Python API if available (supports temperature/top_p)
         if OLLAMA_API_AVAILABLE:
@@ -264,7 +294,7 @@ Format the response as a single, detailed prompt."""
                 
                 return output
             except Exception as e:
-                print(f"Ollama API error: {e}, falling back to subprocess")
+                logger.warning(f"Ollama API error: {e}, falling back to subprocess")
         
         # Fallback to subprocess (no temperature/top_p control)
         try:
@@ -276,8 +306,8 @@ Format the response as a single, detailed prompt."""
             )
             
             if result.returncode != 0:
-                print(f"Error generating prompt: {result.stderr}")
-                return ""
+                logger.error(f"Generation failed: {result.stderr}")
+                raise GenerationError(f"Generation failed: {result.stderr}")
             
             output = result.stdout.strip()
             
@@ -287,11 +317,13 @@ Format the response as a single, detailed prompt."""
             return output
             
         except subprocess.TimeoutExpired:
-            print(f"Generation timed out after {self.timeout}s")
-            return ""
+            logger.error(f"Generation timed out after {self.timeout}s")
+            raise GenerationError(f"Generation timed out after {self.timeout}s")
+        except GenerationError:
+            raise
         except Exception as e:
-            print(f"Error: {e}")
-            return ""
+            logger.error(f"Generation error: {e}")
+            raise GenerationError(f"Generation error: {e}")
     
     def generate_variations(
         self,
