@@ -75,73 +75,97 @@ class StyleKeywords:
         )
 
 
-# Style definitions - separated from logic for easy customization
-STYLE_DEFINITIONS: Dict[StyleMode, StyleKeywords] = {
-    StyleMode.CINEMATIC: StyleKeywords(
-        primary=[
-            "cinematic shot",
-            "film grain",
-            "movie still",
-            "dramatic scene"
-        ],
-        lighting=[
-            "dramatic lighting",
-            "volumetric light",
-            "rim lighting",
-            "chiaroscuro",
-            "golden hour"
-        ],
-        technical=[
-            "anamorphic lens",
-            "shallow depth of field",
-            "bokeh",
-            "35mm film",
-            "wide aspect ratio"
-        ],
-        composition=[
-            "rule of thirds",
-            "leading lines",
-            "dynamic composition",
-            "cinematic framing"
-        ],
-        texture=[
-            "rich color grading",
-            "film texture",
-            "atmospheric haze"
-        ]
+@dataclass
+class StyleDefinition:
+    """Complete style definition with metadata and keywords.
+    
+    This is the single source of truth for all style information.
+    
+    Attributes:
+        name: Human-readable display name
+        description: Brief description for UI tooltips
+        keywords: StyleKeywords instance with all keywords
+    """
+    name: str
+    description: str
+    keywords: StyleKeywords
+
+
+# Style definitions - single source of truth for all style metadata
+STYLE_DEFINITIONS: Dict[StyleMode, StyleDefinition] = {
+    StyleMode.CINEMATIC: StyleDefinition(
+        name="Cinematic",
+        description="Film-like visuals with dramatic lighting and anamorphic qualities",
+        keywords=StyleKeywords(
+            primary=[
+                "cinematic shot",
+                "film grain",
+                "movie still",
+                "dramatic scene"
+            ],
+            lighting=[
+                "dramatic lighting",
+                "volumetric light",
+                "rim lighting",
+                "chiaroscuro",
+                "golden hour"
+            ],
+            technical=[
+                "anamorphic lens",
+                "shallow depth of field",
+                "bokeh",
+                "35mm film",
+                "wide aspect ratio"
+            ],
+            composition=[
+                "rule of thirds",
+                "leading lines",
+                "dynamic composition",
+                "cinematic framing"
+            ],
+            texture=[
+                "rich color grading",
+                "film texture",
+                "atmospheric haze"
+            ]
+        )
     ),
-    StyleMode.STILL_IMAGE: StyleKeywords(
-        primary=[
-            "professional photography",
-            "high resolution",
-            "sharp focus",
-            "studio quality"
-        ],
-        lighting=[
-            "natural lighting",
-            "soft diffused light",
-            "studio lighting",
-            "balanced exposure"
-        ],
-        technical=[
-            "f/2.8 aperture",
-            "ISO 100",
-            "sharp optics",
-            "full frame sensor",
-            "RAW quality"
-        ],
-        composition=[
-            "centered composition",
-            "clean framing",
-            "balanced layout",
-            "professional angle"
-        ],
-        texture=[
-            "realistic textures",
-            "fine details",
-            "crisp definition",
-            "accurate colors"
-        ]
+    StyleMode.STILL_IMAGE: StyleDefinition(
+        name="Still Image (Photography)",
+        description="Sharp, realistic photography with technical camera specifications",
+        keywords=StyleKeywords(
+            primary=[
+                "professional photography",
+                "high resolution",
+                "sharp focus",
+                "studio quality"
+            ],
+            lighting=[
+                "natural lighting",
+                "soft diffused light",
+                "studio lighting",
+                "balanced exposure"
+            ],
+            technical=[
+                "f/2.8 aperture",
+                "ISO 100",
+                "sharp optics",
+                "full frame sensor",
+                "RAW quality"
+            ],
+            composition=[
+                "centered composition",
+                "clean framing",
+                "balanced layout",
+                "professional angle"
+            ],
+            texture=[
+                "realistic textures",
+                "fine details",
+                "crisp definition",
+                "accurate colors"
+            ]
+        )
     )
 }
 
@@ -160,7 +184,7 @@ def get_style_keywords(style: str) -> StyleKeywords:
     """
     try:
         mode = StyleMode(style.lower())
-        return STYLE_DEFINITIONS[mode]
+        return STYLE_DEFINITIONS[mode].keywords
     except ValueError:
         available = [s.value for s in StyleMode]
         raise ValueError(f"Unknown style '{style}'. Available: {', '.join(available)}")
@@ -289,23 +313,20 @@ class StylePreset:
             Dict mapping style names to info dicts
         """
         return {
-            StyleMode.CINEMATIC.value: {
-                "name": "Cinematic",
-                "description": "Film-like visuals with dramatic lighting and anamorphic qualities",
-                "keywords_count": len(get_style_keywords("cinematic").to_list())
-            },
-            StyleMode.STILL_IMAGE.value: {
-                "name": "Still Image (Photography)",
-                "description": "Sharp, realistic photography with technical camera specifications",
-                "keywords_count": len(get_style_keywords("still_image").to_list())
+            mode.value: {
+                "name": definition.name,
+                "description": definition.description,
+                "keywords_count": len(definition.keywords.to_list())
             }
+            for mode, definition in self._styles.items()
         }
 
 
 # For direct import convenience
 __all__ = [
     "StyleMode",
-    "StyleKeywords", 
+    "StyleKeywords",
+    "StyleDefinition",
     "StylePreset",
     "get_style_keywords",
     "get_available_styles",
